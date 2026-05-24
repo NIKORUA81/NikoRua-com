@@ -1,6 +1,6 @@
 import { Router, Request, Response } from 'express'
-import { handleContactSubmission } from '../controllers/contact.controller'
-import { validateContact, contactSchema } from '../middleware/validation.middleware'
+import { handleContactSubmission } from '../controllers/contact.controller.js'
+import { validateContact, contactSchema } from '../middleware/validation.middleware.js'
 
 export const contactRoutes = Router()
 

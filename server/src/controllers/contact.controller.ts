@@ -1,5 +1,5 @@
 import { Resend } from 'resend'
-import { ContactForm } from '../../../shared/types'
+import { ContactForm } from '../../../shared/types.js'
 
 // Inicializar Resend (o Nodemailer si prefieres)
 const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null
@@ -32,7 +32,7 @@ export const handleContactSubmission = async (data: ContactForm) => {
             </p>
           </div>
         `,
-        replyTo: email,
+        reply_to: email,
       })
 
       if (error) {
