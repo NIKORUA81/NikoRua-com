@@ -1,0 +1,86 @@
+version: '3.8'
+
+services:
+  # Frontend (build & serve con Nginx en producción)
+  frontend:
+    build:
+      context: ./client
+      dockerfile: Dockerfile.prod
+      args:
+        - VITE_API_URL=/api
+        - VITE_SITE_URL=https://nikorua.com
+    ports:
+      - "5173:80"
+    environment:
+      - NODE_ENV=production
+    volumes:
+      - ./client:/app:cached
+      - /app/node_modules
+    command: npm run dev
+    networks:
+      - nikorua-net
+    profiles:
+      - development
+
+  # Backend
+  backend:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=development
+      - CORS_ORIGIN=http://localhost:5173
+    env_file:
+      - ./server/.env
+    volumes:
+      - ./server:/app:cached
+      - /app/node_modules
+    command: npm run dev
+    networks:
+      - nikorua-net
+    profiles:
+      - development
+    depends_on:
+      - frontend
+
+  # Producción: App unificada con Nginx
+  app-prod:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.prod
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      - NODE_ENV=production
+      - VITE_API_URL=/api
+    env_file:
+      - ./server/.env
+    volumes:
+      - ./docker/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./docker/ssl:/etc/nginx/ssl:ro
+      - ./certbot/conf:/etc/letsencrypt:ro
+      - ./certbot/www:/var/www/certbot:ro
+    restart: unless-stopped
+    networks:
+      - nikorua-net
+    profiles:
+      - production
+
+  # Certbot para SSL automático
+  certbot:
+    image: certbot/certbot:latest
+    volumes:
+      - ./certbot/conf:/etc/letsencrypt
+      - ./certbot/www:/var/www/certbot
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
+    networks:
+      - nikorua-net
+    profiles:
+      - production
+
+networks:
+  nikorua-net:
+    driver: bridge
