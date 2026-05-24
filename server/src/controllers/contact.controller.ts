@@ -1,5 +1,5 @@
 import { Resend } from 'resend'
-import { ContactForm } from '../../../shared/types.js'
+import { ContactForm } from '../types.js'
 
 // Inicializar Resend (o Nodemailer si prefieres)
 const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null
