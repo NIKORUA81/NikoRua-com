@@ -37,12 +37,14 @@ COPY --from=backend-builder /app/server/dist ./backend
 COPY --from=backend-builder /app/server/package*.json ./backend/
 COPY --from=backend-builder /app/server/node_modules ./backend/node_modules
 
-# Configurar Nginx
-COPY docker/nginx.conf /etc/nginx/nginx.conf
+# Configurar Nginx (puerto 8080, CloudPanel hace proxy)
+COPY docker/nginx.portainer.conf /etc/nginx/nginx.conf
 
 # Crear usuario no-root
 RUN adduser -D -u 1001 nikorua && \
-    chown -R nikorua:nikorua /usr/share/nginx/html /app
+    chown -R nikorua:nikorua /usr/share/nginx/html /app && \
+    chown -R nikorua:nikorua /var/log/nginx /var/cache/nginx /run && \
+    sed -i 's/user  nginx;/# user nginx;/' /etc/nginx/nginx.conf 2>/dev/null || true
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
@@ -51,7 +53,7 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
 USER nikorua
 
 # Exponer puertos
-EXPOSE 80 443
+EXPOSE 8080
 
 # Script de inicio
 COPY docker/entrypoint.sh /entrypoint.sh
